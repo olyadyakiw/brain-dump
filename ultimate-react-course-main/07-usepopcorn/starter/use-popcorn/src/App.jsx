@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import StarRating from './components/StarRating'
 
@@ -90,42 +90,81 @@ function Main({ children }) {
 
 const average = arr => arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0)
 
+const KEY = 'be7a2e1b'
+
 export default function App() {
-    const [movies, setMovies] = useState(tempMovieData)
-    const [watched, setWatched] = useState(tempWatchedData)
+    const [movies, setMovies] = useState([])
+    const [watched, setWatched] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState('')
+    const query = 'gdfgfddgfgddf'
 
-    // return (
-    //     <>
-    //         <Navbar>
-    //             <Search />
-    //             <NumResults movies={movies} />
-    //         </Navbar>
+    useEffect(function () {
+        async function fetchMovies() {
+            try {
+                setIsLoading(true)
+                const res = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${KEY}`)
 
-    //         <Main>
-    //             <Box>
-    //                 <MovieList movies={movies} />
-    //             </Box>
+                if (!res.ok) throw new Error('Something went wrong with fwtching movies')
 
-    //             <Box>
-    //                 <WatchedSummary watched={watched} />
-    //                 <WatchedMovieList watched={watched} />
-    //             </Box>
-    //         </Main>
-    //     </>
-    // )
-
-    const [movieRating, setMovieRating] = useState(0)
+                const data = await res.json()
+                if (data.Response === 'False') throw new Error('Movie not found!')
+                setMovies(data.Search)
+            } catch (err) {
+                setError(err.message)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchMovies()
+    }, [])
 
     return (
-        <div>
-            <StarRating
-                maxRating={5}
-                color="red"
-                messages={['Terrible', 'Bad', 'Okay', 'Good', 'Amazing']}
-                onSetRating={setMovieRating}
-            />
-            <p>My score is {movieRating}</p>
-        </div>
+        <>
+            <Navbar>
+                <Search />
+                <NumResults movies={movies} />
+            </Navbar>
+
+            <Main>
+                <Box>
+                    {isLoading && <Loader />}
+                    {!isLoading && !error && <MovieList movies={movies} />}
+                    {error && <ErrorMessage message={error} />}
+                </Box>
+
+                <Box>
+                    <WatchedSummary watched={watched} />
+                    <WatchedMovieList watched={watched} />
+                </Box>
+            </Main>
+        </>
+    )
+
+    // const [movieRating, setMovieRating] = useState(0)
+
+    // return (
+    //     <div>
+    //         <StarRating
+    //             maxRating={5}
+    //             color="red"
+    //             messages={['Terrible', 'Bad', 'Okay', 'Good', 'Amazing']}
+    //             onSetRating={setMovieRating}
+    //         />
+    //         <p>My score is {movieRating}</p>
+    //     </div>
+    // )
+}
+
+function Loader() {
+    return <p className="loader">Loading...</p>
+}
+
+function ErrorMessage({ message }) {
+    return (
+        <p className="error">
+            <span>❌</span> {message}
+        </p>
     )
 }
 

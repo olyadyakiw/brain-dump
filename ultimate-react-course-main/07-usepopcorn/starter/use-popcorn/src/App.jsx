@@ -95,7 +95,7 @@ export default function App() {
     const [watched, setWatched] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
-    const [query, setQuery] = useState('inception')
+    const [query, setQuery] = useState('')
     const [selectedId, setSelectedId] = useState(null)
 
     const tempQuery = 'interstellar'
@@ -135,19 +135,23 @@ export default function App() {
 
     useEffect(
         function () {
+            const controller = new AbortController()
             async function fetchMovies() {
                 try {
                     setIsLoading(true)
                     setError('')
-                    const res = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${KEY}`)
+                    const res = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${KEY}`, {
+                        signal: controller.signal,
+                    })
 
                     if (!res.ok) throw new Error('Something went wrong with fwtching movies')
 
                     const data = await res.json()
                     if (data.Response === 'False') throw new Error('Movie not found!')
                     setMovies(data.Search)
+                    setError('')
                 } catch (err) {
-                    setError(err.message)
+                    if (err.name !== 'AbortError') setError(err.message)
                 } finally {
                     setIsLoading(false)
                 }
@@ -157,7 +161,13 @@ export default function App() {
                 setError('')
                 return
             }
+
+            handleCLoseMovie()
             fetchMovies()
+
+            return function () {
+                controller.abort()
+            }
         },
         [query]
     )
@@ -315,6 +325,19 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
 
     useEffect(
         function () {
+            function callback(e) {
+                if (e.code === 'Escape') {
+                    onCloseMovie()
+                }
+            }
+            document.addEventListener('keydown', callback)
+            return () => document.removeEventListener('keydown', callback)
+        },
+        [onCloseMovie]
+    )
+
+    useEffect(
+        function () {
             async function getMovieDetails() {
                 setIsLoading(true)
                 const res = await fetch(`https://www.omdbapi.com/?i=${selectedId}&apikey=${KEY}`)
@@ -326,6 +349,18 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
         },
         [selectedId]
     )
+
+    useEffect(
+        function () {
+            if (!title) return
+            document.title = `Movie | ${title}`
+            return () => {
+                document.title = 'usePopcorn'
+            }
+        },
+        [title]
+    )
+
     return (
         <div className="details">
             {isLoading ? (

@@ -1,0 +1,14 @@
+{
+  "name": "simondev-gamedev-exercise",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "three": "^0.167.1",
+    "vite": "^5.4.4"
+  }
+}

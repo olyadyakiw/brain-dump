@@ -1,0 +1,17 @@
+{
+    "name": "01-hello-world",
+    "version": "1.0.0",
+    "description": "",
+    "main": "module",
+    "scripts": {
+        "dev": "vite"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "dependencies": {
+        "three": "^0.181.1",
+        "vite": "^7.2.2"
+    }
+}
